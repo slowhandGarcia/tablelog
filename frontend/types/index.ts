@@ -64,3 +64,15 @@ export interface Post {
   likeCount: number;
   comments: Comment[];
 }
+
+export interface Special {
+  id: string;
+  name: string;
+  description: string;
+  price?: number;
+  originalPrice?: number;
+  category: MuscleGroup;
+  isToday: boolean;
+  expiresAt?: string;
+  createdAt: string;
+}

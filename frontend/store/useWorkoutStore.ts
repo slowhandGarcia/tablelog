@@ -81,7 +81,7 @@ function findOrCreateExerciseId(exerciseName: string): string {
     .exercises.find((e) => e.name.toLowerCase() === trimmed.toLowerCase());
   if (existing) return existing.id;
 
-  useExerciseStore.getState().addExercise({ name: trimmed, muscleGroup: "full body" });
+  useExerciseStore.getState().addExercise({ name: trimmed, muscleGroup: "mains" });
   const created = useExerciseStore
     .getState()
     .exercises.find((e) => e.name.toLowerCase() === trimmed.toLowerCase());

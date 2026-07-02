@@ -66,9 +66,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: "History",
+          title: "Specials",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time" color={color} size={size} />
+            <Ionicons name="pricetag" color={color} size={size} />
           ),
         }}
       />
@@ -93,9 +93,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "More",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle" color={color} size={size} />
+            <Ionicons name="ellipsis-horizontal" color={color} size={size} />
           ),
         }}
       />

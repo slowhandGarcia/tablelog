@@ -106,9 +106,9 @@ export function SideMenu({ visible, onClose, onOpenSettings }: SideMenuProps) {
   const items: MenuItem[] = [
     { label: "Home", icon: "home", onPress: () => goTo("/(tabs)/home") },
     { label: "Menu", icon: "restaurant", onPress: () => goTo("/(tabs)/exercises") },
-    { label: "History", icon: "time", onPress: () => goTo("/(tabs)/history") },
+    { label: "Specials", icon: "pricetag", onPress: () => goTo("/(tabs)/history") },
     { label: "Community", icon: "people", onPress: () => goTo("/(tabs)/feed") },
-    { label: "Profile", icon: "person-circle", onPress: () => goTo("/(tabs)/profile") },
+    { label: "More", icon: "ellipsis-horizontal", onPress: () => goTo("/(tabs)/profile") },
     {
       label: "Settings",
       icon: "settings",

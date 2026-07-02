@@ -94,7 +94,7 @@ export default function WelcomeScreen() {
               </Animated.View>
               <Animated.View style={subtitleStyle}>
                 <Text className="text-gray-300 text-base text-center mt-5 leading-relaxed">
-                  Discover restaurants. Log your visits.{"\n"}Every meal is a memory.
+                  Sign up for appetizing rewards, exclusive app discounts, fresh news and a lot more!
                 </Text>
               </Animated.View>
             </View>

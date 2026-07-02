@@ -74,6 +74,15 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="exercise/[id]" options={{ headerShown: true }} />
+          <Stack.Screen
+            name="events"
+            options={{
+              headerShown: true,
+              title: "Events",
+              presentation: "card",
+              gestureEnabled: true,
+            }}
+          />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

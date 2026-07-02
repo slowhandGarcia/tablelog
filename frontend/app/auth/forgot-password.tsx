@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { api, getApiErrorMessage } from "@/lib/api";
+import { AuthBackground } from "@/components/AuthBackground";
 
 const SUCCESS_MESSAGE = "If an account exists with this email, a reset link has been sent.";
 
@@ -37,7 +38,8 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <AuthBackground>
+    <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -109,5 +111,6 @@ export default function ForgotPasswordScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </AuthBackground>
   );
 }

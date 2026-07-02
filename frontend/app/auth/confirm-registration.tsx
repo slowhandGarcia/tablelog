@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { api, getApiErrorMessage } from "@/lib/api";
 import { applyAuthSession } from "@/store/useAuthStore";
+import { AuthBackground } from "@/components/AuthBackground";
 
 export default function ConfirmRegistrationScreen() {
   const { token } = useLocalSearchParams<{ token?: string }>();
@@ -45,7 +46,8 @@ export default function ConfirmRegistrationScreen() {
   }, [token]);
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <AuthBackground>
+    <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -105,5 +107,6 @@ export default function ConfirmRegistrationScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </AuthBackground>
   );
 }

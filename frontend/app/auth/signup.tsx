@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { api, getApiErrorMessage } from "@/lib/api";
+import { AuthBackground } from "@/components/AuthBackground";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -43,7 +44,8 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <AuthBackground>
+    <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -166,5 +168,6 @@ export default function SignUpScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </AuthBackground>
   );
 }

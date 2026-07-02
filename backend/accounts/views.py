@@ -80,13 +80,13 @@ class RegisterView(APIView):
                 f"{settings.FRONTEND_URL}/auth/confirm-registration?token={token}"
             )
             send_mail(
-                subject="Confirm your Workout Tracker account",
+                subject="Confirm your TableLog account",
                 message=(
                     f"Hi {username},\n\n"
                     "Tap the link below to complete your registration:\n"
                     f"{confirm_url}\n\n"
                     "This link expires in 24 hours.\n\n"
-                    "If you didn't sign up for Workout Tracker, ignore this email."
+                    "If you didn't sign up for TableLog, you can safely ignore this email."
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
@@ -287,11 +287,12 @@ class PasswordResetRequestView(APIView):
             reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?uid={uid}&token={token}"
 
             send_mail(
-                subject="Reset your Workout Tracker password",
+                subject="Reset your TableLog password",
                 message=(
                     f"Hi {user.username},\n\n"
                     "Use the link below to reset your password:\n"
                     f"{reset_link}\n\n"
+                    "This link expires after a single use.\n\n"
                     "If you didn't request this, you can safely ignore this email."
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,

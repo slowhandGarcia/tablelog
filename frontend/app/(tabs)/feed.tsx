@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { usePostStore } from "@/store/usePostStore";
 import { useThemeColors } from "@/store/useThemeStore";
+import { AppBackground } from "@/components/AppBackground";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { PostCard } from "@/components/PostCard";
@@ -73,7 +74,7 @@ export default function FeedScreen() {
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <AppBackground>
       <FlatList
         data={posts}
         keyExtractor={(post) => post.id}
@@ -206,6 +207,6 @@ export default function FeedScreen() {
           if (!result.success) Alert.alert("Couldn't add comment", result.error);
         }}
       />
-    </View>
+    </AppBackground>
   );
 }

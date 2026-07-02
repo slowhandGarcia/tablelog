@@ -209,7 +209,7 @@ export function NewPostModal({ visible, onClose, onPost }: NewPostModalProps) {
               ref={inputRef}
               value={text}
               onChangeText={setText}
-              placeholder="What's on your mind?"
+              placeholder="How was your dining experience? Share a photo, tag a dish…"
               placeholderTextColor={colors.placeholder}
               multiline
               autoFocus
