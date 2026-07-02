@@ -256,15 +256,21 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 # Local dev  (DEBUG=True): emails are printed to the console — no credentials needed.
 # Production (DEBUG=False): Resend SMTP relay — set EMAIL_HOST_PASSWORD and
 #   DEFAULT_FROM_EMAIL in Railway (see .env.example for descriptions).
-if DEBUG:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp.resend.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = "resend"          # Resend SMTP always uses the literal string "resend"
-    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+# Temporarily forced to console regardless of DEBUG until SMTP env vars are
+# confirmed loading correctly on Railway. Switch back to the block below once
+# EMAIL_HOST_PASSWORD is verified in Railway variables.
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# SMTP config kept for when the above is reverted:
+# if DEBUG:
+#     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# else:
+#     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+#     EMAIL_HOST = "smtp.resend.com"
+#     EMAIL_PORT = 587
+#     EMAIL_USE_TLS = True
+#     EMAIL_HOST_USER = "resend"
+#     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@tablelog.local")
 
