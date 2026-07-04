@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "anymail",
     "accounts",
     "workouts",
     "social",
@@ -253,26 +254,21 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 
 # Email
-# Local dev  (DEBUG=True): emails are printed to the console — no credentials needed.
-# Production (DEBUG=False): Resend SMTP relay — set EMAIL_HOST_PASSWORD and
-#   DEFAULT_FROM_EMAIL in Railway (see .env.example for descriptions).
-# Temporarily forced to console regardless of DEBUG until SMTP env vars are
-# confirmed loading correctly on Railway. Switch back to the block below once
-# EMAIL_HOST_PASSWORD is verified in Railway variables.
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Railway blocks outbound SMTP (ports 25/465/587), so we use Resend's HTTP API
+# via django-anymail instead of Django's SMTP backend. Anymail sends over HTTPS
+# (port 443) which is always open.
+# Local dev (DEBUG=True): printed to the console — no credentials needed.
+# Production (DEBUG=False): Resend HTTP API with verified custom domain.
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 
-# SMTP config kept for when the above is reverted:
-# if DEBUG:
-#     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# else:
-#     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-#     EMAIL_HOST = "smtp.resend.com"
-#     EMAIL_PORT = 587
-#     EMAIL_USE_TLS = True
-#     EMAIL_HOST_USER = "resend"
-#     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+ANYMAIL = {
+    "RESEND_API_KEY": os.environ.get("RESEND_API_KEY", ""),
+}
 
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@tablelog.local")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@table-log.com")
 
 # Base URL of the Expo app — used to build the link inside verification/reset emails.
 # Production/TestFlight: "tablelog:/" triggers the app's registered deep-link scheme.
