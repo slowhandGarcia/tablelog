@@ -270,13 +270,12 @@ ANYMAIL = {
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@table-log.com")
 
-# Base URL of the Expo app — used to build the link inside verification/reset emails.
-# Production/TestFlight: "tablelog:/" triggers the app's registered deep-link scheme.
-#   Combined with the path prefix (e.g. /auth/confirm-registration) this produces
-#   tablelog:///auth/... which iOS/Android correctly route into the running app.
-# Local dev: override with the Expo tunnel URL printed by "npx expo start --tunnel"
-#   so tapping a link in the email opens Expo Go on your physical device.
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "tablelog:/")
+# Base URL used to build links inside verification/reset emails.
+# Must be an https:// URL — email clients only render custom-scheme URLs
+# (tablelog://) as plain text, not clickable links.
+# The backend serves thin HTML redirect pages at /auth/confirm-registration/
+# and /auth/reset-password/ that open the app via the tablelog:// deep link.
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://tablelog-production.up.railway.app")
 
 
 # Brute-force login protection — override via env vars on Railway if needed.

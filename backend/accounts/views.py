@@ -5,9 +5,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from django.views import View
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,7 +79,7 @@ class RegisterView(APIView):
                 },
             )
             confirm_url = (
-                f"{settings.FRONTEND_URL}/auth/confirm-registration?token={token}"
+                f"{settings.FRONTEND_URL}/auth/confirm-registration/?token={token}"
             )
             send_mail(
                 subject="Confirm your TableLog account",
@@ -284,7 +286,7 @@ class PasswordResetRequestView(APIView):
         if user is not None:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?uid={uid}&token={token}"
+            reset_link = f"{settings.FRONTEND_URL}/auth/reset-password/?uid={uid}&token={token}"
 
             send_mail(
                 subject="Reset your TableLog password",
@@ -327,3 +329,91 @@ class PasswordResetConfirmView(APIView):
             {"detail": "Your password has been reset. You can now log in."},
             status=status.HTTP_200_OK,
         )
+
+
+def _app_redirect_html(heading: str, body: str, btn_label: str, app_url: str) -> str:
+    """Minimal HTML page that immediately tries to open the app and shows a
+    button fallback. Styled to match the app's dark theme."""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{heading} – TableLog</title>
+  <style>
+    *{{box-sizing:border-box;margin:0;padding:0}}
+    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+         background:#0a0a0a;color:#fff;min-height:100vh;display:flex;
+         align-items:center;justify-content:center;padding:24px;text-align:center}}
+    .wrap{{max-width:340px;width:100%}}
+    h1{{font-size:22px;font-weight:700;margin-bottom:12px}}
+    p{{color:#9ca3af;font-size:15px;line-height:1.6;margin-bottom:32px}}
+    a{{display:block;background:#f59e0b;color:#000;padding:15px 24px;
+       border-radius:12px;text-decoration:none;font-weight:700;font-size:16px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>{heading}</h1>
+    <p>{body}</p>
+    <a href="{app_url}">{btn_label}</a>
+  </div>
+  <script>setTimeout(function(){{window.location.href="{app_url}";}},400);</script>
+</body>
+</html>"""
+
+
+class ConfirmRegistrationWebView(View):
+    """GET /auth/confirm-registration/?token=...
+
+    Serves an https:// page (clickable in email clients) that opens the app
+    via the tablelog:// deep link. The app then POSTs the token to the API
+    to complete account creation."""
+
+    def get(self, request):
+        token = request.GET.get("token", "")
+        if not token:
+            html = _app_redirect_html(
+                heading="Invalid link",
+                body="This confirmation link is missing a token. Please sign up again.",
+                btn_label="Open TableLog",
+                app_url="tablelog://",
+            )
+            return HttpResponse(html, content_type="text/html", status=400)
+
+        app_url = f"tablelog://auth/confirm-registration?token={token}"
+        html = _app_redirect_html(
+            heading="Confirm your account",
+            body="Tap the button below to confirm your TableLog account. The app will open automatically.",
+            btn_label="Confirm & Open App",
+            app_url=app_url,
+        )
+        return HttpResponse(html, content_type="text/html")
+
+
+class PasswordResetWebView(View):
+    """GET /auth/reset-password/?uid=...&token=...
+
+    Serves an https:// page (clickable in email clients) that opens the app
+    via the tablelog:// deep link so the user can enter their new password."""
+
+    def get(self, request):
+        uid = request.GET.get("uid", "")
+        token = request.GET.get("token", "")
+        if not uid or not token:
+            html = _app_redirect_html(
+                heading="Invalid link",
+                body="This password reset link is incomplete. Please request a new one.",
+                btn_label="Open TableLog",
+                app_url="tablelog://",
+            )
+            return HttpResponse(html, content_type="text/html", status=400)
+
+        app_url = f"tablelog://auth/reset-password?uid={uid}&token={token}"
+        html = _app_redirect_html(
+            heading="Reset your password",
+            body="Tap the button below to open TableLog and set your new password.",
+            btn_label="Open TableLog",
+            app_url=app_url,
+        )
+        return HttpResponse(html, content_type="text/html")
