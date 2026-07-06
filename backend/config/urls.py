@@ -17,7 +17,6 @@ urlpatterns = [
     path("auth/reset-password/", PasswordResetWebView.as_view(), name="web-reset-password"),
 ]
 
-# Serve uploaded media in all environments.
-# TODO: replace with Cloudinary/S3 before shipping — Railway's local disk
-# is ephemeral and images are lost on every redeploy.
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Local dev only — in production R2 serves files directly from its CDN.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

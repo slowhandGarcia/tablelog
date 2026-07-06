@@ -203,11 +203,34 @@ STORAGES = {
     },
 }
 
-# Post images — saved to local disk and served by Django.
-# WARNING: Railway's filesystem is ephemeral; images are wiped on redeploy.
-# Move to Cloudinary/S3 before going to production with real users.
+# Post images
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Cloudflare R2 object storage for user-uploaded images.
+# Activates automatically when all R2_* env vars are set in Railway.
+# Falls back to local disk when absent (local dev only — Railway's filesystem
+# is ephemeral and files are wiped on every redeploy).
+_r2_required = ("R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET_NAME")
+if all(os.environ.get(v) for v in _r2_required):
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    }
+    AWS_S3_ENDPOINT_URL = f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com"
+    AWS_ACCESS_KEY_ID = os.environ["R2_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY = os.environ["R2_SECRET_ACCESS_KEY"]
+    AWS_STORAGE_BUCKET_NAME = os.environ["R2_BUCKET_NAME"]
+    AWS_S3_REGION_NAME = "auto"
+    AWS_S3_ADDRESSING_STYLE = "path"  # R2 requires path-style, not virtual-hosted
+    AWS_DEFAULT_ACL = None            # R2 uses bucket policies, not per-object ACLs
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_QUERYSTRING_AUTH = False      # public bucket — plain URLs, no signing needed
+    AWS_S3_FILE_OVERWRITE = False     # never silently overwrite an existing upload
+    # R2_PUBLIC_URL: the r2.dev subdomain or a custom domain pointed at the bucket.
+    # Example: "pub-abc123.r2.dev" or "media.table-log.com"
+    _r2_public = os.environ.get("R2_PUBLIC_URL", "")
+    if _r2_public:
+        AWS_S3_CUSTOM_DOMAIN = _r2_public
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
