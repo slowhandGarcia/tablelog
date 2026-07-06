@@ -17,5 +17,7 @@ urlpatterns = [
     path("auth/reset-password/", PasswordResetWebView.as_view(), name="web-reset-password"),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve uploaded media in all environments.
+# TODO: replace with Cloudinary/S3 before shipping — Railway's local disk
+# is ephemeral and images are lost on every redeploy.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

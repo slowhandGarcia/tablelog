@@ -203,10 +203,10 @@ STORAGES = {
     },
 }
 
-# Post images — saved to local disk and served by Django itself in DEBUG
-# (see config/urls.py). For production this should move to real object
-# storage (e.g. S3); local disk doesn't survive a Railway redeploy.
-MEDIA_URL = "media/"
+# Post images — saved to local disk and served by Django.
+# WARNING: Railway's filesystem is ephemeral; images are wiped on redeploy.
+# Move to Cloudinary/S3 before going to production with real users.
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
