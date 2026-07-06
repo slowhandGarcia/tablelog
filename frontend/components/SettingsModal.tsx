@@ -23,6 +23,7 @@ import {
   DEFAULT_PROFILE_BIO,
 } from "@/store/useProfileStore";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
+import { ContactDevModal } from "@/components/ContactDevModal";
 
 interface SettingsModalProps {
   visible: boolean;
@@ -40,8 +41,10 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const logout = useAuthStore((s) => s.logout);
   const deleteAccount = useAuthStore((s) => s.deleteAccount);
   const { name, bio, location, email, avatarUri } = useProfileStore();
+  const isAdmin = !isGuest && (user?.isStaff ?? false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isChangePasswordVisible, setIsChangePasswordVisible] = useState(false);
+  const [isContactDevVisible, setIsContactDevVisible] = useState(false);
 
   const hasFilledProfile =
     !!avatarUri ||
@@ -248,6 +251,24 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             </Pressable>
           )}
 
+          {isAdmin && (
+            <>
+              <Text className="text-sm font-semibold mb-2 mt-8" style={{ color: colors.muted }}>
+                Admin
+              </Text>
+              <Pressable
+                onPress={() => setIsContactDevVisible(true)}
+                className="rounded-xl py-3.5 items-center border active:opacity-70 flex-row justify-center gap-2"
+                style={{ backgroundColor: colors.surface, borderColor: colors.border }}
+              >
+                <Ionicons name="mail-outline" size={18} color="#3b82f6" />
+                <Text className="text-base font-semibold" style={{ color: "#3b82f6" }}>
+                  Contact Developers
+                </Text>
+              </Pressable>
+            </>
+          )}
+
           {!isGuest && (
             <>
               <Text className="text-sm font-semibold mb-2 mt-8" style={{ color: colors.muted }}>
@@ -294,6 +315,10 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
       <ChangePasswordModal
         visible={isChangePasswordVisible}
         onClose={() => setIsChangePasswordVisible(false)}
+      />
+      <ContactDevModal
+        visible={isContactDevVisible}
+        onClose={() => setIsContactDevVisible(false)}
       />
     </Modal>
   );

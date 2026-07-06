@@ -293,6 +293,9 @@ ANYMAIL = {
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@table-log.com")
 
+# Destination for admin "Contact Developers" submissions from the app.
+DEV_CONTACT_EMAIL = os.environ.get("DEV_CONTACT_EMAIL", "dev@table-log.com")
+
 # Base URL used to build links inside verification/reset emails.
 # Must be an https:// URL — email clients only render custom-scheme URLs
 # (tablelog://) as plain text, not clickable links.

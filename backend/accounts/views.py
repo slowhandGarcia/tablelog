@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, send_mail
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -327,6 +327,53 @@ class PasswordResetConfirmView(APIView):
 
         return Response(
             {"detail": "Your password has been reset. You can now log in."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ContactDevView(APIView):
+    """POST /api/auth/contact-dev/ — staff/superuser only.
+
+    Accepts an update_type, a description, and optional image attachments,
+    then emails the development team with the full details."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"detail": "Admin access required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        update_type = request.data.get("update_type", "").strip()
+        description = request.data.get("description", "").strip()
+
+        if not update_type or not description:
+            return Response(
+                {"detail": "update_type and description are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        image_files = request.FILES.getlist("images")
+
+        msg = EmailMessage(
+            subject=f"[TableLog] {update_type} Update Request",
+            body=(
+                f"Update Type: {update_type}\n"
+                f"From: {request.user.username} ({request.user.email})\n\n"
+                f"Description:\n{description}\n\n"
+                f"Images attached: {len(image_files)}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[settings.DEV_CONTACT_EMAIL],
+        )
+        for f in image_files:
+            msg.attach(f.name, f.read(), f.content_type)
+        msg.send()
+
+        return Response(
+            {"detail": "Message sent to the development team."},
             status=status.HTTP_200_OK,
         )
 

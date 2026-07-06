@@ -12,6 +12,7 @@ export interface User {
   email: string;
   username: string;
   isLoggedIn: boolean;
+  isStaff: boolean;
   createdAt: string;
 }
 
@@ -53,6 +54,7 @@ interface ApiUser {
   location: string;
   avatar_url: string;
   created_at: string;
+  is_staff: boolean;
 }
 
 const toUser = (apiUser: ApiUser): User => ({
@@ -60,6 +62,7 @@ const toUser = (apiUser: ApiUser): User => ({
   email: apiUser.email,
   username: apiUser.username,
   isLoggedIn: true,
+  isStaff: apiUser.is_staff ?? false,
   createdAt: apiUser.created_at,
 });
 
