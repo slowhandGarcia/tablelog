@@ -54,8 +54,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "6cf00cdd-b457-4fa6-9c47-6c0f961cd5a0"
+        "projectId": "cd68b35c-48be-447d-a9a8-eef83232c619"
       }
-    }
+    },
+    "owner": "slowhandgarcia"
   }
 }
