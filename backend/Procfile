@@ -1,2 +1,6 @@
-release: python manage.py migrate
-web: gunicorn config.wsgi --bind 0.0.0.0:$PORT
+# Railway does not reliably run the Heroku-style `release:` phase, so migrations
+# are run as part of the web start command instead — this guarantees pending
+# migrations are applied on every deploy/restart before gunicorn boots.
+# `release:` is kept as a no-op-safe fallback for platforms that do honor it.
+release: python manage.py migrate --noinput
+web: python manage.py migrate --noinput && gunicorn config.wsgi --bind 0.0.0.0:$PORT
