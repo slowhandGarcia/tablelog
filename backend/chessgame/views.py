@@ -119,8 +119,9 @@ class ChessGameViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             game = ChessGame.objects.select_for_update().get(pk=pk)
 
-            if game.status not in (ChessGame.Status.ACTIVE, ChessGame.Status.WAITING):
-                return Response({"detail": "Game already over."}, status=400)
+            if game.status != ChessGame.Status.ACTIVE:
+                # A game still waiting for an opponent is cancelled, not resigned.
+                return Response({"detail": "Game is not in progress."}, status=400)
             if request.user.id not in (game.white_id, game.black_id):
                 return Response({"detail": "You're not in this game."}, status=403)
 
@@ -134,6 +135,26 @@ class ChessGameViewSet(viewsets.ModelViewSet):
             game.save(update_fields=["status", "result", "winner", "updated_at"])
 
         return Response(self._data(game))
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        """Creator removes a game that never started (still waiting for an
+        opponent). Deletes the record so it vanishes from every list. Games
+        already in progress must be resigned instead."""
+        with transaction.atomic():
+            game = ChessGame.objects.select_for_update().get(pk=pk)
+
+            if game.status != ChessGame.Status.WAITING:
+                return Response(
+                    {"detail": "Only games waiting for an opponent can be cancelled."},
+                    status=400,
+                )
+            if game.creator_id != request.user.id:
+                return Response({"detail": "Only the creator can cancel this game."}, status=403)
+
+            game.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def _data(self, game):
         return ChessGameSerializer(game, context=self.get_serializer_context()).data

@@ -114,3 +114,30 @@ class ChessFlowTests(APITestCase):
     def test_requires_auth(self):
         res = self.client.get("/api/chess/games/")
         self.assertEqual(res.status_code, 401)
+
+    def test_creator_can_cancel_waiting_game(self):
+        self.client.force_authenticate(self.alice)
+        gid = self.client.post("/api/chess/games/", {"color": "white"}, format="json").data["id"]
+
+        # Non-creator cannot cancel
+        self.client.force_authenticate(self.bob)
+        res = self.client.post(f"/api/chess/games/{gid}/cancel/")
+        self.assertEqual(res.status_code, 403)
+        self.assertTrue(ChessGame.objects.filter(pk=gid).exists())
+
+        # Creator cancels -> row deleted
+        self.client.force_authenticate(self.alice)
+        res = self.client.post(f"/api/chess/games/{gid}/cancel/")
+        self.assertEqual(res.status_code, 204)
+        self.assertFalse(ChessGame.objects.filter(pk=gid).exists())
+
+    def test_cannot_cancel_active_game(self):
+        self.client.force_authenticate(self.alice)
+        gid = self.client.post("/api/chess/games/", {"color": "white"}, format="json").data["id"]
+        self.client.force_authenticate(self.bob)
+        self.client.post(f"/api/chess/games/{gid}/join/")  # now active
+
+        self.client.force_authenticate(self.alice)
+        res = self.client.post(f"/api/chess/games/{gid}/cancel/")
+        self.assertEqual(res.status_code, 400)
+        self.assertTrue(ChessGame.objects.filter(pk=gid).exists())
