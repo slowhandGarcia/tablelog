@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "accounts",
     "workouts",
     "social",
+    "chessgame",
 ]
 
 MIDDLEWARE = [

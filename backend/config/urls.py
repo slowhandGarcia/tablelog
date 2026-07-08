@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("api/", include("workouts.urls")),
     path("api/", include("social.urls")),
+    path("api/chess/", include("chessgame.urls")),
     # Web redirect pages — https:// links in emails open these, which then
     # deep-link into the app via tablelog://. Must live outside /api/ so they
     # return HTML, not JSON.
