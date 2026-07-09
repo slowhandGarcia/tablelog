@@ -83,6 +83,12 @@ export default function RootLayout() {
               gestureEnabled: true,
             }}
           />
+          <Stack.Screen name="shooter" options={{ headerShown: false }} />
+          <Stack.Screen name="deadzone" options={{ headerShown: false }} />
+          <Stack.Screen name="rpg" options={{ headerShown: false }} />
+          <Stack.Screen name="chess/index" options={{ headerShown: true, title: "Chess" }} />
+          <Stack.Screen name="chess/[id]" options={{ headerShown: true, title: "Chess" }} />
+          <Stack.Screen name="chess/local" options={{ headerShown: true, title: "Chess" }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

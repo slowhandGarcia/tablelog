@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
   ScrollView,
+  FlatList,
   Pressable,
   TextInput,
   StyleSheet,
@@ -49,15 +49,16 @@ const CATEGORY_ICONS: Record<MuscleGroup, keyof typeof Ionicons.glyphMap> = {
   snacks:    "pizza",
 };
 
+// Warm amber/brown palette gives each category a distinct restaurant feel
 const CATEGORY_COLORS: Record<MuscleGroup, string> = {
-  specials:  "#f97316",
-  starters:  "#ef4444",
-  breakfast: "#06b6d4",
-  mains:     "#3b82f6",
-  sides:     "#22c55e",
-  desserts:  "#f59e0b",
-  drinks:    "#8b5cf6",
-  snacks:    "#ec4899",
+  specials:  "#c2410c",
+  starters:  "#b45309",
+  breakfast: "#0369a1",
+  mains:     "#92400e",
+  sides:     "#166534",
+  desserts:  "#be185d",
+  drinks:    "#6d28d9",
+  snacks:    "#1e40af",
 };
 
 export default function MenuScreen() {
@@ -121,22 +122,22 @@ export default function MenuScreen() {
           data={searchResults}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={styles.searchContent}
           renderItem={({ item }) => {
             const color = CATEGORY_COLORS[item.muscleGroup];
             return (
               <Pressable
                 onPress={() => router.push(`/exercise/${item.id}`)}
-                style={[styles.flatItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                style={[styles.searchItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
               >
-                <View style={[styles.itemAccent, { backgroundColor: color }]} />
+                <View style={[styles.searchAccent, { backgroundColor: color }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.itemText, { color: colors.text }]}>{item.name}</Text>
-                  <Text style={[styles.itemCategory, { color: colors.muted }]}>
+                  <Text style={[styles.searchItemName, { color: colors.text }]}>{item.name}</Text>
+                  <Text style={[styles.searchItemCat, { color: colors.muted }]}>
                     {CATEGORY_LABELS[item.muscleGroup]}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={15} color={colors.muted} />
+                <Ionicons name="chevron-forward" size={15} color={colors.muted} style={{ marginRight: 14 }} />
               </Pressable>
             );
           }}
@@ -148,81 +149,94 @@ export default function MenuScreen() {
         />
       ) : (
 
-        /* ── Accordion sections ──────────────────────────────────────────── */
+        /* ── Accordion category list ────────────────────────────────────── */
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={styles.listPad}
         >
-          {sections.map(({ category, data }) => {
-            const isOpen = openCategories.has(category);
-            const color = CATEGORY_COLORS[category];
-            const icon = CATEGORY_ICONS[category];
+          {/* Outer container matches the screenshot's single-surface card feel */}
+          <View style={[styles.menuCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {sections.map(({ category, data }, idx) => {
+              const isOpen = openCategories.has(category);
+              const color = CATEGORY_COLORS[category];
+              const icon = CATEGORY_ICONS[category];
+              const isLast = idx === sections.length - 1;
 
-            return (
-              <View
-                key={category}
-                style={[styles.accordionCard, { backgroundColor: colors.surface }]}
-              >
-                {/* Header */}
-                <Pressable
-                  onPress={() => toggleCategory(category)}
-                  style={styles.accordionHeader}
-                >
-                  <View style={[styles.accordionIconWrap, { backgroundColor: color + "22" }]}>
-                    <Ionicons name={icon} size={16} color={color} />
-                  </View>
+              return (
+                <View key={category}>
 
-                  <Text style={[styles.accordionLabel, { color: colors.text }]}>
-                    {CATEGORY_LABELS[category]}
-                  </Text>
+                  {/* ── Category header row ─────────────────────────────── */}
+                  <Pressable
+                    onPress={() => toggleCategory(category)}
+                    style={styles.categoryRow}
+                  >
+                    {/* Category image placeholder — swap src for a real food photo */}
+                    <View style={[styles.categoryImg, { backgroundColor: color + "25" }]}>
+                      <Ionicons name={icon} size={32} color={color} />
+                    </View>
 
-                  <View style={[styles.countBadge, { backgroundColor: color + "18" }]}>
-                    <Text style={[styles.countText, { color }]}>{data.length}</Text>
-                  </View>
+                    {/* Name + count */}
+                    <View style={styles.categoryInfo}>
+                      <Text style={[styles.categoryName, { color: colors.text }]}>
+                        {CATEGORY_LABELS[category]}
+                      </Text>
+                      <Text style={[styles.categoryCount, { color: colors.muted }]}>
+                        {data.length} {data.length === 1 ? "item" : "items"} to choose from
+                      </Text>
+                    </View>
 
-                  <Ionicons
-                    name={isOpen ? "chevron-up" : "chevron-down"}
-                    size={18}
-                    color={colors.muted}
-                  />
-                </Pressable>
+                    {/* Chevron */}
+                    <Ionicons
+                      name={isOpen ? "chevron-up" : "chevron-down"}
+                      size={22}
+                      color={colors.muted}
+                    />
+                  </Pressable>
 
-                {/* Items */}
-                {isOpen && (
-                  <>
-                    <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
-                    {data.map((item, idx) => (
-                      <View key={item.id}>
-                        <Pressable
-                          onPress={() => router.push(`/exercise/${item.id}`)}
-                          style={styles.accordionItem}
-                        >
-                          <View style={[styles.itemAccent, { backgroundColor: color }]} />
-                          <Text style={[styles.itemText, { color: colors.text }]}>
-                            {item.name}
-                          </Text>
-                          <Ionicons name="chevron-forward" size={15} color={colors.muted} style={{ marginRight: 14 }} />
-                        </Pressable>
-                        {idx < data.length - 1 && (
-                          <View style={[styles.itemDivider, { backgroundColor: colors.border }]} />
-                        )}
-                      </View>
-                    ))}
-                  </>
-                )}
-              </View>
-            );
-          })}
+                  {/* ── Expanded dish rows ──────────────────────────────── */}
+                  {isOpen && (
+                    <View style={[styles.dishList, { borderTopColor: colors.border }]}>
+                      {data.map((item, dishIdx) => (
+                        <View key={item.id}>
+                          <Pressable
+                            onPress={() => router.push(`/exercise/${item.id}`)}
+                            style={styles.dishRow}
+                          >
+                            <View style={[styles.dishDot, { backgroundColor: color }]} />
+                            <Text
+                              numberOfLines={1}
+                              style={[styles.dishName, { color: colors.text }]}
+                            >
+                              {item.name}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={15} color={colors.muted} />
+                          </Pressable>
+                          {dishIdx < data.length - 1 && (
+                            <View style={[styles.dishDivider, { backgroundColor: colors.border }]} />
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
 
+                  {/* Separator between categories */}
+                  {!isLast && (
+                    <View style={[styles.categorySeparator, { backgroundColor: colors.border }]} />
+                  )}
+                </View>
+              );
+            })}
+          </View>
         </ScrollView>
       )}
+
     </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  // Search
+  // Search bar
   searchWrap: {
     paddingHorizontal: 16,
     paddingTop: 14,
@@ -242,93 +256,113 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
-  // Shared list padding
-  listContent: {
+  // Scroll padding
+  listPad: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+
+  // Outer menu card (wraps all categories)
+  menuCard: {
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+  },
+
+  // Category accordion header
+  categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 14,
+  },
+  // Replace this View with an <Image> once you have real category photos
+  categoryImg: {
+    width: 82,
+    height: 82,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  categoryInfo: {
+    flex: 1,
+    gap: 5,
+  },
+  categoryName: {
+    fontSize: 21,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  categoryCount: {
+    fontSize: 13,
+    fontStyle: "italic",
+  },
+
+  // Hairline between categories
+  categorySeparator: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: 16,
+  },
+
+  // Expanded dish list
+  dishList: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  dishRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 56,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  dishDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  dishName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  dishDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 16,
+  },
+
+  // Search result list
+  searchContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
     gap: 10,
   },
-
-  // Accordion card
-  accordionCard: {
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  accordionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 10,
-  },
-  accordionIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  accordionLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    letterSpacing: -0.1,
-  },
-  countBadge: {
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  countText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  // Dividers inside accordion
-  headerDivider: {
-    height: StyleSheet.hairlineWidth,
-  },
-  itemDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 17, // aligns with item text (3px accent + 14px gap)
-  },
-
-  // Accordion items
-  accordionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  itemAccent: {
-    width: 3,
-    alignSelf: "stretch",
-    marginRight: 14,
-  },
-  itemText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "500",
-    paddingVertical: 14,
-  },
-
-  // Flat search results
-  flatItem: {
+  searchItem: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     minHeight: 52,
-    paddingRight: 14,
   },
-  itemCategory: {
+  searchAccent: {
+    width: 3,
+    alignSelf: "stretch",
+    marginRight: 14,
+  },
+  searchItemName: {
+    fontSize: 15,
+    fontWeight: "500",
+    paddingVertical: 14,
+  },
+  searchItemCat: {
     fontSize: 12,
     textTransform: "capitalize",
     marginTop: 1,
     marginBottom: 2,
   },
-
-  // Empty search state
   emptyText: {
     textAlign: "center",
     marginTop: 40,

@@ -29,7 +29,7 @@ export default function TabsLayout() {
           paddingBottom: 10,
           paddingTop: 6,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "600" },
+        tabBarLabelStyle: { fontSize: 9, fontWeight: "600" },
         headerStyle: {
           backgroundColor: isDark ? "#0a0a0a" : "#ffffff",
           // removes the iOS/Android hairline under the header
@@ -87,6 +87,15 @@ export default function TabsLayout() {
           title: "Community",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="games"
+        options={{
+          title: "Games",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="game-controller" color={color} size={size} />
           ),
         }}
       />

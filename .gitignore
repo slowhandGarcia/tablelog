@@ -4,8 +4,12 @@ node_modules/
 dist/
 *.log
 
-# Build artifacts / distributable bundles (source folders are committed, not the zips)
+# Build artifacts / distributable bundles
 *.zip
+
+# Standalone teammate hand-off bundles (duplicate code, kept out of the app repo)
+chess-standalone/
+games-standalone/
 
 # Backend
 backend/venv/

@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { View, Text, ImageBackground, Pressable, StyleSheet, Dimensions } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, ImageBackground, Pressable, StyleSheet, Dimensions, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +18,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const HERO_HEIGHT = SCREEN_HEIGHT * 0.48;
 
 export default function OnboardingScreen() {
+  const [agreed, setAgreed] = useState(false);
   const setGuest = useAuthStore((s) => s.setGuest);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const isLoggedIn = useAuthStore((s) => s.user?.isLoggedIn ?? false);
@@ -113,19 +114,51 @@ export default function OnboardingScreen() {
           </Text>
         </Animated.View>
 
-        <Animated.View style={[styles.buttonGroup, buttonStyle]}>
-          <Pressable
-            onPress={() => router.push("/auth/login")}
-            style={[styles.btn, styles.btnOutline]}
-          >
-            <Text style={styles.btnOutlineText}>Log In</Text>
-          </Pressable>
+        <Animated.View style={buttonStyle}>
+          <View style={styles.buttonGroup}>
+            <Pressable
+              onPress={() => router.push("/auth/login")}
+              disabled={!agreed}
+              style={[styles.btn, styles.btnOutline, !agreed && styles.btnDisabled]}
+            >
+              <Text style={styles.btnOutlineText}>Log In</Text>
+            </Pressable>
 
+            <Pressable
+              onPress={() => router.push("/auth/signup")}
+              disabled={!agreed}
+              style={[styles.btn, styles.btnPrimary, !agreed && styles.btnDisabled]}
+            >
+              <Text style={styles.btnPrimaryText}>Sign Up</Text>
+            </Pressable>
+          </View>
+
+          {/* Terms checkbox */}
           <Pressable
-            onPress={() => router.push("/auth/signup")}
-            style={[styles.btn, styles.btnPrimary]}
+            onPress={() => setAgreed((v) => !v)}
+            style={styles.termsRow}
+            hitSlop={8}
           >
-            <Text style={styles.btnPrimaryText}>Sign Up</Text>
+            <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
+              {agreed && <Ionicons name="checkmark" size={14} color="#000000" />}
+            </View>
+            <Text style={styles.termsText}>
+              By signing up or logging in, I agree to the{" "}
+              <Text
+                style={styles.termsLink}
+                onPress={() => Linking.openURL("https://table-log.com/terms")}
+              >
+                Terms and Conditions
+              </Text>
+              {" "}and{" "}
+              <Text
+                style={styles.termsLink}
+                onPress={() => Linking.openURL("https://table-log.com/privacy")}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -206,5 +239,41 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontSize: 18,
     fontWeight: "700",
+  },
+  btnDisabled: {
+    opacity: 0.35,
+  },
+  termsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    marginTop: 20,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.45)",
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  checkboxChecked: {
+    backgroundColor: "#f59e0b",
+    borderColor: "#f59e0b",
+  },
+  termsText: {
+    flex: 1,
+    color: "#94a3b8",
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: "#ffffff",
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
 });

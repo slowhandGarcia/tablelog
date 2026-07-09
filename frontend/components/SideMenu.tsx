@@ -108,6 +108,7 @@ export function SideMenu({ visible, onClose, onOpenSettings }: SideMenuProps) {
     { label: "Menu", icon: "restaurant", onPress: () => goTo("/(tabs)/exercises") },
     { label: "Specials", icon: "pricetag", onPress: () => goTo("/(tabs)/history") },
     { label: "Community", icon: "people", onPress: () => goTo("/(tabs)/feed") },
+    { label: "Games", icon: "game-controller", onPress: () => goTo("/(tabs)/games" as Href) },
     { label: "More", icon: "ellipsis-horizontal", onPress: () => goTo("/(tabs)/profile") },
     {
       label: "Settings",
