@@ -17,9 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.edwardfernandez.tablelog",
       "buildNumber": "2",
-      "usesNonExemptEncryption": false,
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
