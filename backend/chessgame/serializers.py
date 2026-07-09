@@ -1,15 +1,15 @@
 from rest_framework import serializers
 
-from accounts.serializers import UserSerializer
+from accounts.serializers import PublicUserSerializer
 
 from .models import ChessGame
 
 
 class ChessGameSerializer(serializers.ModelSerializer):
-    creator = UserSerializer(read_only=True)
-    white = UserSerializer(read_only=True)
-    black = UserSerializer(read_only=True)
-    winner = UserSerializer(read_only=True)
+    creator = PublicUserSerializer(read_only=True)
+    white = PublicUserSerializer(read_only=True)
+    black = PublicUserSerializer(read_only=True)
+    winner = PublicUserSerializer(read_only=True)
     turn = serializers.CharField(source="side_to_move", read_only=True)
     my_color = serializers.SerializerMethodField()
 

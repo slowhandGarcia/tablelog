@@ -115,6 +115,19 @@ class ChessFlowTests(APITestCase):
         res = self.client.get("/api/chess/games/")
         self.assertEqual(res.status_code, 401)
 
+    def test_players_omit_email(self):
+        # Nested player fields must not leak PII (email / is_staff).
+        self.client.force_authenticate(self.alice)
+        gid = self.client.post("/api/chess/games/", {"color": "white"}, format="json").data["id"]
+        self.client.force_authenticate(self.bob)
+        res = self.client.post(f"/api/chess/games/{gid}/join/")
+        for field in ("creator", "white", "black"):
+            player = res.data[field]
+            if player is not None:
+                self.assertIn("username", player)
+                self.assertNotIn("email", player)
+                self.assertNotIn("is_staff", player)
+
     def test_creator_can_cancel_waiting_game(self):
         self.client.force_authenticate(self.alice)
         gid = self.client.post("/api/chess/games/", {"color": "white"}, format="json").data["id"]

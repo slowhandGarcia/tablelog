@@ -11,12 +11,27 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Full profile — includes PII (email) and is_staff. Use ONLY where a user
+    reads their OWN data: /api/auth/me/, login and confirm-registration
+    responses. Never nest this inside another user's data."""
+
     created_at = serializers.DateTimeField(source="date_joined", read_only=True)
 
     class Meta:
         model = User
         fields = ["id", "email", "username", "bio", "location", "avatar_url", "created_at", "is_staff"]
         read_only_fields = ["id", "created_at", "is_staff"]
+
+
+class PublicUserSerializer(serializers.ModelSerializer):
+    """Public-facing view of a user, safe to expose to *other* users. Excludes
+    email and is_staff. Use for every nested author/player reference (posts,
+    comments, chess games) so those endpoints never leak PII."""
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "avatar_url", "bio", "location"]
+        read_only_fields = fields
 
 
 class RegisterSerializer(serializers.ModelSerializer):

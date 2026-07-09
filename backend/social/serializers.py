@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
-from accounts.serializers import UserSerializer
+from accounts.serializers import PublicUserSerializer
 
 from .models import Comment, CommunityPost
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = PublicUserSerializer(read_only=True)
 
     class Meta:
         model = Comment
@@ -15,7 +15,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class CommunityPostSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = PublicUserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     like_count = serializers.IntegerField(source="likes.count", read_only=True)
     is_liked = serializers.SerializerMethodField()

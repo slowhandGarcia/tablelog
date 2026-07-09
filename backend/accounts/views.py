@@ -1,3 +1,5 @@
+import json
+import re
 from datetime import timedelta
 
 from django.conf import settings
@@ -8,6 +10,7 @@ from django.core.mail import EmailMessage, send_mail
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
+from django.utils.html import escape
 from django.utils.http import urlsafe_base64_encode
 from django.views import View
 from rest_framework import generics, permissions, status
@@ -378,9 +381,41 @@ class ContactDevView(APIView):
         )
 
 
+# Tokens/uids embedded in the redirect pages only ever contain URL-safe
+# characters: secrets.token_urlsafe (confirm), Django's base36 reset token, and
+# urlsafe-base64 uids — i.e. [A-Za-z0-9_-] plus '=' padding / '.'. Anything else
+# is an injection attempt and is rejected outright (primary XSS defense).
+_SAFE_TOKEN_RE = re.compile(r"^[A-Za-z0-9_\-=.]+$")
+
+
+def _is_safe_token(value: str) -> bool:
+    return bool(value) and len(value) <= 512 and _SAFE_TOKEN_RE.match(value) is not None
+
+
+def _js_string(value: str) -> str:
+    """Serialize a value as a JS string literal safe to embed in an inline
+    <script>. json.dumps handles quote/backslash escaping; the extra unicode
+    escapes stop a literal '</script>' or '<!--' in the value from breaking out
+    of the script element (the HTML parser scans for </script> before the JS
+    even runs). Returns a quoted literal, e.g. '"tablelog://..."'."""
+    return (
+        json.dumps(value)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
+
+
 def _app_redirect_html(heading: str, body: str, btn_label: str, app_url: str) -> str:
     """Minimal HTML page that immediately tries to open the app and shows a
-    button fallback. Styled to match the app's dark theme."""
+    button fallback. Styled to match the app's dark theme.
+
+    `app_url` is escaped for both contexts it appears in — the href attribute
+    (HTML-escaped) and the inline script (JS-string-escaped) — so it is safe
+    even if a caller ever passes attacker-influenced input. `heading`, `body`
+    and `btn_label` are developer-controlled constants."""
+    href = escape(app_url)          # HTML attribute context
+    js_url = _js_string(app_url)    # JS string context (includes surrounding quotes)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -403,9 +438,9 @@ def _app_redirect_html(heading: str, body: str, btn_label: str, app_url: str) ->
   <div class="wrap">
     <h1>{heading}</h1>
     <p>{body}</p>
-    <a href="{app_url}">{btn_label}</a>
+    <a href="{href}">{btn_label}</a>
   </div>
-  <script>setTimeout(function(){{window.location.href="{app_url}";}},400);</script>
+  <script>setTimeout(function(){{window.location.href={js_url};}},400);</script>
 </body>
 </html>"""
 
@@ -419,10 +454,12 @@ class ConfirmRegistrationWebView(View):
 
     def get(self, request):
         token = request.GET.get("token", "")
-        if not token:
+        # Reject a missing or malformed token (anything outside the URL-safe
+        # token charset is an injection attempt) — never reflect it.
+        if not _is_safe_token(token):
             html = _app_redirect_html(
                 heading="Invalid link",
-                body="This confirmation link is missing a token. Please sign up again.",
+                body="This confirmation link is missing or invalid. Please sign up again.",
                 btn_label="Open TableLog",
                 app_url="tablelog://",
             )
@@ -447,10 +484,11 @@ class PasswordResetWebView(View):
     def get(self, request):
         uid = request.GET.get("uid", "")
         token = request.GET.get("token", "")
-        if not uid or not token:
+        # Reject a missing or malformed uid/token — never reflect it.
+        if not (_is_safe_token(uid) and _is_safe_token(token)):
             html = _app_redirect_html(
                 heading="Invalid link",
-                body="This password reset link is incomplete. Please request a new one.",
+                body="This password reset link is incomplete or invalid. Please request a new one.",
                 btn_label="Open TableLog",
                 app_url="tablelog://",
             )

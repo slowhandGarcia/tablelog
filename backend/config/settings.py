@@ -10,13 +10,26 @@ from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-change-me-in-production")
 DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+# SECRET_KEY must come from the environment. In production (DEBUG=False) a
+# missing/blank key is a hard startup error rather than a silent fallback to a
+# predictable value — a known SECRET_KEY lets an attacker forge session
+# cookies, CSRF tokens, password-reset tokens and any other signed value.
+SECRET_KEY = os.environ.get("SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-dev-only-not-for-production"
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY environment variable is required when DEBUG=False."
+        )
 
 # The literal known production domain, kept as a hardcoded fallback
 # independent of whether RAILWAY_PUBLIC_DOMAIN actually gets injected (its
@@ -108,6 +121,38 @@ SESSION_COOKIE_SECURE = not DEBUG
 # without that, this setting alone would redirect-loop every request.
 SECURE_SSL_REDIRECT = not DEBUG
 
+# ── Security response headers (production) ───────────────────────────────────
+# HSTS: tell browsers to only ever reach this host over HTTPS. Gated to
+# production so local http dev is unaffected. `preload` + includeSubDomains is
+# the strong config; only submit the domain to the HSTS preload list once every
+# subdomain is guaranteed HTTPS (https://hstspreload.org).
+SECURE_HSTS_SECONDS = 0 if DEBUG else 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+
+# X-Content-Type-Options: nosniff (explicit; also enforced by middleware).
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Don't leak full request URLs to other origins via the Referer header.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# Cross-Origin-Opener-Policy: isolate this origin's browsing context.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+
+# Clickjacking: this API/admin should never be embedded in a frame. Reinforced
+# by `frame-ancestors 'none'` in the CSP (see config/middleware.py).
+X_FRAME_OPTIONS = "DENY"
+
+# Cookie hardening (defaults are already safe; set explicitly for clarity).
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# Cap request body sizes to blunt memory-exhaustion (DoS) via oversized
+# uploads/payloads. 10 MB covers image posts; anything larger is rejected.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+
 
 # Application definition
 
@@ -130,6 +175,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "config.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -245,6 +291,29 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    # Serve JSON only in production. The browsable API renders an HTML page
+    # (with inline scripts) for every endpoint — handy in dev, but in prod it's
+    # needless attack surface and information disclosure. Kept in DEBUG.
+    "DEFAULT_RENDERER_CLASSES": (
+        [
+            "rest_framework.renderers.JSONRenderer",
+            "rest_framework.renderers.BrowsableAPIRenderer",
+        ]
+        if DEBUG
+        else ["rest_framework.renderers.JSONRenderer"]
+    ),
+    # Baseline abuse/DoS throttling. Generous enough not to affect the app's
+    # ~1 req/s polling; tune via env if needed. Uses the default local-memory
+    # cache (per-process) — approximate but dependency-free; the login lockout
+    # (accounts app) remains DB-backed and exact.
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": os.environ.get("THROTTLE_ANON", "60/min"),
+        "user": os.environ.get("THROTTLE_USER", "300/min"),
+    },
 }
 
 SIMPLE_JWT = {

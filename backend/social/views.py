@@ -1,4 +1,3 @@
-import os
 from uuid import uuid4
 
 from django.core.files.storage import default_storage
@@ -9,6 +8,7 @@ from rest_framework.response import Response
 
 from .models import Comment, CommunityPost
 from .serializers import CommentSerializer, CommunityPostSerializer
+from .validators import validate_images
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -19,12 +19,18 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
 
 def _save_uploaded_images(files, request):
-    """Saves each uploaded file under MEDIA_ROOT/posts/ and returns their
-    absolute URLs, so `images` always holds URLs the client can render
-    directly — whether the post was created on this device or another."""
+    """Validates then saves each uploaded file under MEDIA_ROOT/posts/ and
+    returns their absolute URLs, so `images` always holds URLs the client can
+    render directly — whether the post was created on this device or another.
+
+    Every file is validated up-front (real JPEG/PNG/WEBP within size/dimension
+    limits, verified with Pillow — see validators.py); an invalid file raises a
+    400 before anything is written. The stored extension is derived from the
+    decoded image format, never from the attacker-controlled filename."""
+    extensions = validate_images(files)
     urls = []
-    for f in files:
-        ext = os.path.splitext(f.name)[1]
+    for f, ext in zip(files, extensions):
+        f.seek(0)
         path = default_storage.save(f"posts/{uuid4().hex}{ext}", f)
         urls.append(request.build_absolute_uri(default_storage.url(path)))
     return urls
