@@ -1,21 +1,28 @@
 import json
-import os
 from uuid import uuid4
 
 from django.core.files.storage import default_storage
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 
+from social.validators import validate_images
+
 from .models import Workout
 from .serializers import WorkoutSerializer
 
 
 def _save_uploaded_images(files, request):
-    """Saves each uploaded file under MEDIA_ROOT/workouts/ and returns their
-    absolute URLs, mirroring the same pattern used for community post images."""
+    """Validates then saves each uploaded file under MEDIA_ROOT/workouts/ and
+    returns their absolute URLs, mirroring the community-post image pipeline.
+
+    Every file is validated up-front (real JPEG/PNG/WEBP within size/dimension
+    limits, verified with Pillow — see social/validators.py); an invalid file
+    raises a 400 before anything is written. The stored extension is derived
+    from the decoded image format, never the client-supplied filename."""
+    extensions = validate_images(files)
     urls = []
-    for f in files:
-        ext = os.path.splitext(f.name)[1]
+    for f, ext in zip(files, extensions):
+        f.seek(0)
         path = default_storage.save(f"workouts/{uuid4().hex}{ext}", f)
         urls.append(request.build_absolute_uri(default_storage.url(path)))
     return urls
